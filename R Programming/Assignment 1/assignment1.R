@@ -42,6 +42,32 @@ complete <- function(directory, id = 1:332) {
   return(complete)
 }
 
+
+
+
+complete <- function(directory, id = 1:332) {
+  #First read in the data and put it into a list
+  files_list <- list.files(directory, full.names=TRUE)
+  
+  #Declare an empty the size of the column vector to be that of the size of id
+  nobs <- vector("numeric", length = length(id))
+  
+  #Use a for loop to run through the data
+  for(i in seq_along(id)) {
+    #Read in the data
+    dat <- read.table(files_list[id[i]], header=T, sep=",")
+    
+    #Sum a vector of indicating a complete case and put it into nobs
+    obs <- sum(!is.na(dat))   
+    nobs <- rbind(nobs, obs)
+  }
+  
+  #Combine the id vector and nobs vector by columns
+  complete <- cbind(id,nobs)
+  return(complete)
+  #return(nobs)
+}
+
 complete("specdata", 1)
 ##   id nobs
 ## 1  1  117
