@@ -58,12 +58,12 @@ complete <- function(directory, id = 1:332) {
     dat <- read.table(files_list[id[i]], header=T, sep=",")
     
     #Sum a vector of indicating a complete case and put it into nobs
-    obs <- sum(!is.na(dat))   
-    nobs <- rbind(nobs, obs)
+    nobs[i] <- nrow(dat[complete.cases(dat)==T,])   
   }
   
   #Combine the id vector and nobs vector by columns
   complete <- cbind(id,nobs)
+  complete <- data.frame(complete)
   return(complete)
   #return(nobs)
 }
@@ -93,14 +93,43 @@ complete("specdata", 3)
 
 #PART III
 corr <- function(directory, threshold = 0) {
+  files_list <- list.files(directory, full.names=TRUE)
   complete_dat <- complete(directory, 1:332)
-  corr_data <- vector("numeric", length = length(id))
-  #Write a bit of code that eliminates id from complete_dat based on number of full rows
   
-  for(i in seq_along(complete_dat$id)){
-    temp_data <- read.table(files_list[complete_dat$id[i]], header=T, sep=",")
-    corr_data[i] <- cor(temp_data$sulfate, temp_data$ironite)
+  id <- complete_dat$id[complete_dat$nobs >= threshold]
+
+  corr_data <- vector("numeric", length = length(id))
+  
+  for(i in seq_along(id)){
+    temp_data <- read.table(files_list[[id[i]]], header=T, sep=",")
+    corr_data[i] <- cor(temp_data$sulfate, temp_data$nitrate, use = "pairwise.complete.obs")
+    #corr_data[i] <- cor(temp_data[,])
   }
   
-  
+  return(corr_data)
 }
+
+cr <- corr("specdata", 150)
+head(cr)
+## [1] -0.01896 -0.14051 -0.04390 -0.06816 -0.12351 -0.07589
+summary(cr)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -0.2110 -0.0500  0.0946  0.1250  0.2680  0.7630
+cr <- corr("specdata", 400)
+head(cr)
+## [1] -0.01896 -0.04390 -0.06816 -0.07589  0.76313 -0.15783
+summary(cr)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -0.1760 -0.0311  0.1000  0.1400  0.2680  0.7630
+cr <- corr("specdata", 5000)
+summary(cr)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## 
+length(cr)
+## [1] 0
+cr <- corr("specdata")
+summary(cr)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+## -1.0000 -0.0528  0.1070  0.1370  0.2780  1.0000
+length(cr)
+## [1] 323
